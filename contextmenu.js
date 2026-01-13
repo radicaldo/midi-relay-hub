@@ -72,7 +72,7 @@ function buildContextMenu() {
 			},
 		},
 		{
-			label: 'Open MIDI Input Trigger Settings',
+			label: 'Open Midi Relay Hub Console',
 			click: function () {
 				shell.openExternal(`http://127.0.0.1:${config.get('apiPort')}`)
 			},
