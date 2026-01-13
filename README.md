@@ -300,6 +300,5 @@ npx npm-check-updates
 ## License
 
 MIT License
-
 Midi Relay Originally created by [Joseph Adams](https://josephadams.dev).  
-Forked and extended by the community.
+Forked and extended by Radicaldo.
