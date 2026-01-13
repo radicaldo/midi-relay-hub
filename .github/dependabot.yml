@@ -16,6 +16,24 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    # Prevent semver-major updates for packages that have moved to ESM-only.
+    # This repo currently uses CommonJS (require()), so these majors would break runtime.
+    ignore:
+      - dependency-name: "electron-util"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "electron-store"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "electron-unhandled"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "electron-debug"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@electron/notarize"
+        update-types:
+          - "version-update:semver-major"
     # Group minor/patch updates together to reduce PR noise
     groups:
       minor-and-patch:
