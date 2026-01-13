@@ -92,7 +92,7 @@ curl http://127.0.0.1:8090/integrations/screendeck
 ```bash
 curl -X POST http://127.0.0.1:8090/integrations/screendeck \
   -H "Content-Type: application/json" \
-  -d '{"emulatorUrl":"http://10.77.77.150:8000/emulator/"}'
+  -d '{"emulatorUrl":"http://10.0.0150:8000/emulator/"}'
 ```
 
 **List currently-registered surfaces (snapshot):**

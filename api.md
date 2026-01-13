@@ -107,7 +107,7 @@ Returns the persisted ScreenDeck integration settings.
   screenDeck: {
     companionHost: '127.0.0.1',
     companionPort: 16622,
-    emulatorUrl: 'http://10.77.77.150:8000/emulator/',
+    emulatorUrl: 'http://10.0.0150:8000/emulator/',
     devices: []
   }
 }
@@ -120,9 +120,9 @@ Updates ScreenDeck integration settings. All fields are optional; values are san
 ```javascript
 // request body
 {
-  companionHost: '10.77.77.150',
+  companionHost: '10.0.0150',
   companionPort: 16622,
-  emulatorUrl: 'http://10.77.77.150:8000/emulator/',
+  emulatorUrl: 'http://10.0.0150:8000/emulator/',
   devices: [
     {
       id: 'ThinkPadDeck',
