@@ -204,7 +204,7 @@ The **Surfaces** tab is intended to display “button surfaces” (virtual or ph
 
 ### Bitfocus Companion
 
-Use the [midi-relay Companion module](https://github.com/bitfocus/companion-module-josephdadams-midi-relay) to send MIDI from Companion buttons.
+Use the [midi-relay Companion module](https://github.com/bitfocus/companion-module-josephdadams-midi-relay) to send MIDI from Companion buttons or from Midi Relay Hub you can control companion or remote streamdecks.
 
 ---
 
@@ -297,8 +297,9 @@ npx npm-check-updates
 
 ---
 
-## License
+## Licenses
 
 MIT License
+Forked and extended by [Radicaldo](https://github.com/radicaldo).
 Midi Relay Originally created by [Joseph Adams](https://josephadams.dev).  
-Forked and extended by Radicaldo.
+
