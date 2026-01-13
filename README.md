@@ -7,7 +7,7 @@ Added quite a few enhancements and tools for troubleshooting network midi issues
 
 Midi Relay Hub lets you send and receive MIDI messages across a network using JSON-based HTTP requests. Built for AV and stage production (Church, Concerts, stage shows, plays, etc), automation, and integration with tools like streamdeck, [Bitfocus Companion](https://bitfocus.io/companion) and [n8n](https://n8n.io).
 
-> 🎹 *The base of the project is pulled/Forked from [midi-relay](https://github.com/josephdadams/midi-relay) by Joseph Adams*
+> 🎹 Originally forked from [midi-relay](https://github.com/josephdadams/midi-relay) (Joseph Adams) and expanded significantly.
 
 ---
 
@@ -21,7 +21,7 @@ Midi Relay Hub lets you send and receive MIDI messages across a network using JS
 - **Triggers** — React to incoming MIDI with HTTP webhooks, scripts, or automation
 - **Profiles** — Save/load trigger configurations for different events
 - **Test Button** — Validate your webhook URLs before going live
-- **Cross-platform** — Windows, macOS, Linux (desktop app or headless)
+- **Cross-platform** — Runs on Windows/Linux; macOS from source (packaging/signing currently disabled)
 - **Companion API URL Builder** — Helps construct URLs to send to companion for triggers and testing
 - **Surfaces (Preview + Embed)** — View registered button surfaces and embed a Companion emulator URL as a fallback viewer
   
@@ -34,33 +34,35 @@ Midi Relay Hub lets you send and receive MIDI messages across a network using JS
 
 ## Getting Started
 
-### Desktop Application (v3.x)
+### Desktop Application (v1.x)
 
-1. Download the latest release from [Releases](https://github.com/radicaldo/midi-relay-remix/releases)
-2. Install with NPM Install or run exe install on Windows
+1. Download the latest release from [Releases](https://github.com/radicaldo/midi-relay-hub/releases)
+2. On Windows, run the installer `.exe`
 3. MIDI ports are scanned automatically on startup
 4. Access the web UI at `http://127.0.0.1:8090` (default; configurable via `apiPort`)
+
+Note: macOS packaging/signing is currently disabled until an Apple Developer ID is available.
 
 ### Development
 
 ```bash
 # Clone the repo
-git clone https://github.com/radicaldo/midi-relay-remix.git
-cd midi-relay-remix
+git clone https://github.com/radicaldo/midi-relay-hub.git
+cd midi-relay-hub
 
 # Install dependencies
-npm install
+yarn install
 
 # Start the app
-npm start
+yarn start
 ```
 
 ### Running Tests
 
 ```bash
-npm test                # Run all tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # With coverage report
+yarn test               # Run all tests
+yarn test:watch         # Watch mode
+yarn test:coverage      # With coverage report
 ```
 
 ---
@@ -89,6 +91,7 @@ curl http://localhost:4000/midi_inputs
 **View Live Log:**
 ```bash
 curl http://localhost:4000/log
+```
 
 ### ScreenDeck / Surfaces (New)
 
@@ -101,13 +104,12 @@ curl http://127.0.0.1:8090/integrations/screendeck
 ```bash
 curl -X POST http://127.0.0.1:8090/integrations/screendeck \
   -H "Content-Type: application/json" \
-  -d '{"emulatorUrl":"http://10.0.0.150:8000/emulator/"}'
+  -d '{"emulatorUrl":"http://127.0.0.1:8000/emulator/"}'
 ```
 
 **List currently-registered surfaces (snapshot):**
 ```bash
 curl http://127.0.0.1:8090/surfaces
-```
 ```
 
 ---

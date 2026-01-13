@@ -36,7 +36,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Syntax check
-        run: yarn check
+        run: yarn run check
 
       - name: Unit tests
         run: yarn test

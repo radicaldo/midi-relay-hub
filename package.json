@@ -1,12 +1,13 @@
 {
 	"name": "midi-relay-hub",
 	"productName": "Midi Relay Hub",
-	"version": "3.6.0",
+	"version": "1.0.0",
 	"author": {
 		"name": "Radicaldo",
 		"email": "info@cloud-cost.com"
 	},
 	"description": "Midi Relay Hub: Orchestrating church automation with MIDI. Forked from midi-relay.",
+	"license": "MIT",
 	"main": "index.js",
 	"scripts": {
 		"start": "electron .",
@@ -14,7 +15,7 @@
 		"lint:raw": "eslint --ext .ts --ext .js --ignore-pattern dist --ignore-pattern pkg",
 		"lint": "yarn lint:raw .",
 		"pack": "electron-builder --dir",
-		"dist": "electron-builder --macos --linux --windows",
+		"dist": "electron-builder --linux --windows",
 		"distWin": "electron-builder --windows",
 		"rebuild": "npx @electron/rebuild -f -w midi",
 		"postinstall": "npx @electron/rebuild -f -w midi",
@@ -28,28 +29,6 @@
 	"build": {
 		"appId": "com.midi.midi-relay-hub",
 		"productName": "Midi Relay Hub",
-		"mac": {
-			"target": [
-				{
-					"target": "dmg",
-					"arch": [
-						"x64",
-						"arm64"
-					]
-				}
-			],
-			"category": "public.app-category.utilities",
-			"icon": "static/icon.png",
-			"identity": "Radicaldo (R2PY2DC3A4)",
-			"extendInfo": {
-				"NSApplicationSupportsSecureRestorableState": true,
-				"electronTeamId": "R2PY2DC3A4"
-			},
-			"hardenedRuntime": true,
-			"gatekeeperAssess": true,
-			"entitlements": "entitlements.mac.plist",
-			"entitlementsInherit": "entitlements.mac.plist"
-		},
 		"win": {
 			"target": "nsis",
 			"icon": "static/icon.ico"
@@ -96,7 +75,6 @@
 		"mdns-js": "^1.0.3"
 	},
 	"devDependencies": {
-		"@electron/notarize": "^2.5.0",
 		"@electron/rebuild": "^3.3.0",
 		"electron": "^39.2.7",
 		"electron-builder": "^25.1.8",

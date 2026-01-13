@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-01-13
+
+### Changed
+- Versioning reset to **1.0.0** to reflect that Midi Relay Hub has evolved well beyond the original upstream project.
+- macOS packaging/signing/notarization removed from config/workflows until an Apple Developer ID is available.
+
+### Added
+- PR/push CI workflow to run install + syntax check + tests.
+- Dependabot configuration updated to avoid opening semver-major Electron ESM-only upgrades (prevents breaking `require(...)` without a planned migration).
+
 ## [3.6.0] - 2025-01-12
 
 ### Added
