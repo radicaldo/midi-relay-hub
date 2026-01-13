@@ -1,6 +1,6 @@
 'use strict'
 const path = require('path')
-const { app, BrowserWindow, Tray, nativeImage, Menu } = require('electron')
+const { app, BrowserWindow, Tray, nativeImage, Menu, ipcMain } = require('electron')
 /// const {autoUpdater} = require('electron-updater');
 const { is } = require('electron-util')
 const unhandled = require('electron-unhandled')
@@ -9,6 +9,7 @@ const contextMenu = require('electron-context-menu')
 const config = require('./config.js')
 const util = require('./util.js')
 const API = require('./api.js')
+const { ScreenDeckSatellite } = require('./screendeckSatellite.js')
 
 const notifications = require('./notifications.js')
 
@@ -78,6 +79,8 @@ if (process.platform === 'darwin') {
 
 // Prevent window from being garbage collected
 let mainWindow
+
+const screenDeckSatellite = new ScreenDeckSatellite()
 
 const createMainWindow = async () => {
 	global.win = new BrowserWindow({
@@ -149,13 +152,45 @@ app.on('activate', async () => {
 	global.tray = new Tray(icon.resize({ width: 24, height: 24 }))
 	global.tray.setToolTip('Dave Relay')
 
-	API.start(config.get('apiPort'))
+	const apiPort = config.get('apiPort')
+	API.start(apiPort)
+	screenDeckSatellite.init({ apiPort })
 	global.broadcastTriggers = function () {
 		API.broadcastTriggers()
 	}
 	global.broadcastLogsCleared = function () {
 		API.broadcastLogsCleared()
 	}
+
+	// IPC: ScreenDeck (Built-in Satellite)
+	ipcMain.handle('screendeck:getStatus', async () => {
+		return screenDeckSatellite.getStatus()
+	})
+	ipcMain.handle('screendeck:openAll', async () => {
+		screenDeckSatellite.openAllWindows()
+		return { success: true }
+	})
+	ipcMain.handle('screendeck:reconnect', async () => {
+		screenDeckSatellite.reconnect()
+		return screenDeckSatellite.getStatus()
+	})
+	ipcMain.handle('screendeck:getDevice', async (_e, { deviceId }) => {
+		if (typeof deviceId !== 'string') return null
+		return screenDeckSatellite.devices.get(deviceId) || null
+	})
+	ipcMain.on('screendeck:key', (_e, payload) => {
+		try {
+			if (!payload) return
+			const deviceId = typeof payload.deviceId === 'string' ? payload.deviceId : ''
+			const x = payload.x
+			const y = payload.y
+			const pressed = !!payload.pressed
+			if (!deviceId) return
+			screenDeckSatellite.keyPress(deviceId, x, y, pressed)
+		} catch (_err) {
+			// ignore
+		}
+	})
 
 	mainWindow = await createMainWindow()
 	Menu.setApplicationMenu(require('./menu.js'))

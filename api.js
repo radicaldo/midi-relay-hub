@@ -34,10 +34,12 @@ function sanitizeSurfaceId(value) {
 	return trimmed
 }
 
-function clampInt(n, min, max) {
-	const v = Number.parseInt(String(n), 10)
-	if (!Number.isFinite(v)) return min
-	return Math.max(min, Math.min(max, v))
+function clampInt(value, min, max, fallback = min) {
+	const n = Number.parseInt(String(value), 10)
+	if (!Number.isFinite(n)) return fallback
+	if (n < min) return min
+	if (n > max) return max
+	return n
 }
 
 function surfacesSnapshot() {
@@ -130,14 +132,6 @@ function sanitizeHttpUrl(value) {
 	} catch (_) {
 		return ''
 	}
-}
-
-function clampInt(value, min, max, fallback) {
-	const n = Number.parseInt(String(value), 10)
-	if (!Number.isFinite(n)) return fallback
-	if (n < min) return min
-	if (n > max) return max
-	return n
 }
 
 function clampOpacity01Or100(value, fallback) {
@@ -583,6 +577,111 @@ class API {
 	static broadcastLogsCleared() {
 		if (io) {
 			io.sockets.emit('logs_cleared')
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Internal Surfaces API (used by built-in ScreenDeck/Satellite)
+	// -------------------------------------------------------------------------
+
+	static internalRegisterSurface(info) {
+		try {
+			const surfaceId = sanitizeSurfaceId(info && info.surfaceId)
+			if (!surfaceId) return false
+
+			const name = typeof info.name === 'string' && info.name.trim() ? info.name.trim() : surfaceId
+			const product = typeof info.product === 'string' && info.product.trim() ? info.product.trim() : null
+			const columns = clampInt(info.columns, 1, 32, 8)
+			const rows = clampInt(info.rows, 1, 32, 4)
+			const host = typeof info.host === 'string' && info.host.trim() ? info.host.trim() : 'local'
+
+			const existing = surfaces.get(surfaceId)
+			surfaces.set(surfaceId, {
+				surfaceId,
+				name,
+				product,
+				host,
+				columns,
+				rows,
+				connectedAt: existing && existing.connectedAt ? existing.connectedAt : Date.now(),
+				lastSeen: Date.now(),
+				keys: (existing && existing.keys) || {},
+			})
+
+			broadcastSurfaces()
+			return true
+		} catch (_e) {
+			return false
+		}
+	}
+
+	static internalSurfaceDraw(payload) {
+		try {
+			const surfaceId = sanitizeSurfaceId(payload && payload.surfaceId)
+			if (!surfaceId) return
+			const surface = surfaces.get(surfaceId)
+			if (!surface) return
+
+			const x = clampInt(payload.x, 0, surface.columns - 1, 0)
+			const y = clampInt(payload.y, 0, surface.rows - 1, 0)
+			const key = `${x},${y}`
+
+			const state = payload && payload.state ? payload.state : {}
+			const nextState = {
+				text: typeof state.text === 'string' ? state.text : undefined,
+				bgColor: typeof state.bgColor === 'string' ? state.bgColor : undefined,
+				color: typeof state.color === 'string' ? state.color : undefined,
+				imageDataUrl: typeof state.imageDataUrl === 'string' ? state.imageDataUrl : undefined,
+			}
+
+			surface.keys[key] = { ...(surface.keys[key] || {}), ...nextState }
+			surface.lastSeen = Date.now()
+
+			if (io) io.sockets.emit('surface_draw', { surfaceId, x, y, state: surface.keys[key] })
+			broadcastSurfaces()
+		} catch (_e) {
+			// ignore
+		}
+	}
+
+	static internalSurfaceClear(payload) {
+		try {
+			const surfaceId = sanitizeSurfaceId(payload && payload.surfaceId)
+			if (!surfaceId) return
+			const surface = surfaces.get(surfaceId)
+			if (!surface) return
+			surface.keys = {}
+			surface.lastSeen = Date.now()
+			broadcastSurfaces()
+		} catch (_e) {
+			// ignore
+		}
+	}
+
+	static internalSurfaceKey(payload) {
+		try {
+			const surfaceId = sanitizeSurfaceId(payload && payload.surfaceId)
+			if (!surfaceId) return
+			const surface = surfaces.get(surfaceId)
+			if (!surface) return
+			const x = clampInt(payload.x, 0, surface.columns - 1, 0)
+			const y = clampInt(payload.y, 0, surface.rows - 1, 0)
+			const action = typeof payload.action === 'string' ? payload.action : 'press'
+			surface.lastSeen = Date.now()
+			if (io) io.sockets.emit('surface_key', { surfaceId, x, y, action })
+		} catch (_e) {
+			// ignore
+		}
+	}
+
+	static internalRemoveSurface(payload) {
+		try {
+			const surfaceId = sanitizeSurfaceId(payload && payload.surfaceId)
+			if (!surfaceId) return
+			surfaces.delete(surfaceId)
+			broadcastSurfaces()
+		} catch (_e) {
+			// ignore
 		}
 	}
 }

@@ -483,8 +483,8 @@ http://(companionIP:companionPort)/api/location/(page)/(row)/(column)/(action)</
 					</button>
 					<div class="panel" id="screenDeckSettingsPanel">
 						<p style="margin-top: 8px;">
-							Configure how this hub connects to Companion Satellite and how many virtual decks you want to manage.
-							(This is the "settings page" piece — the actual Satellite client is the next step.)
+							Configure how this hub connects to Companion and how many virtual ScreenDecks you want to manage.
+							The built-in Satellite client runs inside this app and opens deck windows.
 						</p>
 
 						<div style="margin-top: 8px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.6);">
@@ -499,6 +499,16 @@ http://(companionIP:companionPort)/api/location/(page)/(row)/(column)/(action)</
 								</div>
 							</div>
 							<div id="screenDeckSettingsStatus" style="font-size: 0.9em; color: #374151; margin-top: 6px;">(not configured)</div>
+						</div>
+
+						<div style="margin-top: 10px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.6);">
+							<div style="font-weight: 600; margin-bottom: 6px;">Built-in Satellite Client</div>
+							<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+								<button onclick="screenDeckSatelliteOpenAll()">Open Deck Windows</button>
+								<button onclick="screenDeckSatelliteReconnect()">Reconnect</button>
+								<button onclick="screenDeckSatelliteRefreshStatus()">Refresh Status</button>
+							</div>
+							<div id="screenDeckSatelliteStatus" style="font-size: 0.9em; color: #374151; margin-top: 6px;">(status unknown)</div>
 						</div>
 
 						<div style="margin-top: 10px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.6);">
@@ -518,6 +528,14 @@ http://(companionIP:companionPort)/api/location/(page)/(row)/(column)/(action)</
 					<div id="surfacesStatus" style="font-size: 0.9em; color: #374151;">Waiting for surfaces…</div>
 					<div style="margin-top: 6px; font-size: 0.9em; color: #374151;">
 						Tip: configure ScreenDeck connection/devices in <a href="#panelIntegrations" onclick="showPanel('panelIntegrations'); return false;">Integrations</a>.
+					</div>
+					<div style="margin-top: 10px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.65);">
+						<div style="font-weight: 600; margin-bottom: 6px;">ScreenDeck (Built-in Satellite)</div>
+						<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+							<button onclick="screenDeckSatelliteOpenAll()">Open Deck Windows</button>
+							<button onclick="screenDeckSatelliteRefreshStatus()">Refresh Status</button>
+						</div>
+						<div id="screenDeckSatelliteStatusSurfaces" style="font-size: 0.9em; color: #374151; margin-top: 6px;">(status unknown)</div>
 					</div>
 					<div style="margin-top: 10px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.65);">
 						<div style="font-weight: 600; margin-bottom: 6px;">Companion Emulator (Last Resort)</div>

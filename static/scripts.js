@@ -376,6 +376,7 @@ function onLoad() {
 		// Connected
 		loadSettings()
 		screenDeckLoadSettings().catch(() => {})
+		screenDeckSatelliteRefreshStatus().catch(() => {})
 		profilesFetchList().catch(() => {})
 		surfacesFetchList().catch(() => {})
 		fetch('/logs')
@@ -687,6 +688,55 @@ function onLoad() {
 // ScreenDeck / Companion Emulator (Last Resort)
 // =============================================================================
 
+function screenDeckGetIpcRenderer() {
+	try {
+		return window.require && window.require('electron') && window.require('electron').ipcRenderer
+	} catch (_e) {
+		return null
+	}
+}
+
+function screenDeckSetSatelliteStatus(msg, isError) {
+	const el1 = document.getElementById('screenDeckSatelliteStatus')
+	const el2 = document.getElementById('screenDeckSatelliteStatusSurfaces')
+	for (const el of [el1, el2]) {
+		if (!el) continue
+		el.style.color = isError ? '#b91c1c' : '#374151'
+		el.innerText = msg
+	}
+}
+
+async function screenDeckSatelliteRefreshStatus() {
+	const ipc = screenDeckGetIpcRenderer()
+	if (!ipc) {
+		screenDeckSetSatelliteStatus('Built-in satellite status is only available inside the Electron app.', false)
+		return
+	}
+
+	const st = await ipc.invoke('screendeck:getStatus')
+	const conn = st && st.connected ? 'Connected' : st && st.connecting ? 'Connecting' : 'Disconnected'
+	const v = st && st.companionVersion ? `Companion ${st.companionVersion}` : 'Companion (unknown)'
+	const api = st && st.companionApiVersion ? `API ${st.companionApiVersion}` : 'API (unknown)'
+	const devices = st && typeof st.deviceCount === 'number' ? st.deviceCount : 0
+	const registered = st && typeof st.registeredCount === 'number' ? st.registeredCount : 0
+	const msg = `${conn} • ${v} • ${api} • devices ${registered}/${devices}`
+	screenDeckSetSatelliteStatus(msg, false)
+}
+
+async function screenDeckSatelliteOpenAll() {
+	const ipc = screenDeckGetIpcRenderer()
+	if (!ipc) return
+	await ipc.invoke('screendeck:openAll')
+	await screenDeckSatelliteRefreshStatus()
+}
+
+async function screenDeckSatelliteReconnect() {
+	const ipc = screenDeckGetIpcRenderer()
+	if (!ipc) return
+	await ipc.invoke('screendeck:reconnect')
+	await screenDeckSatelliteRefreshStatus()
+}
+
 let screenDeckState = {
 	devices: [],
 }
@@ -860,6 +910,7 @@ async function screenDeckSaveConnection() {
 		screenDeckSetSettingsStatus('Saved.', false)
 		// Re-render from server echo
 		if (data && data.screenDeck) screenDeckRenderSettings(data.screenDeck)
+		screenDeckSatelliteRefreshStatus().catch(() => {})
 	} catch (err) {
 		screenDeckSetSettingsStatus(err && err.message ? err.message : String(err), true)
 	}
@@ -935,6 +986,7 @@ async function screenDeckSaveDevice(deviceId) {
 		if (!r.ok || !data || data.success === false) throw new Error((data && data.error) || 'Save failed')
 		screenDeckSetSettingsStatus('Saved.', false)
 		if (data && data.screenDeck) screenDeckRenderSettings(data.screenDeck)
+		screenDeckSatelliteRefreshStatus().catch(() => {})
 	} catch (err) {
 		screenDeckSetSettingsStatus(err && err.message ? err.message : String(err), true)
 	}
@@ -964,6 +1016,7 @@ async function screenDeckDeleteDevice(deviceId) {
 		if (!r.ok || !data || data.success === false) throw new Error((data && data.error) || 'Save failed')
 		screenDeckSetSettingsStatus('Deleted and saved.', false)
 		if (data && data.screenDeck) screenDeckRenderSettings(data.screenDeck)
+		screenDeckSatelliteRefreshStatus().catch(() => {})
 	} catch (err) {
 		screenDeckSetSettingsStatus(err && err.message ? err.message : String(err), true)
 	}
