@@ -27,7 +27,7 @@ Midi Relay Hub lets you send and receive MIDI messages across a network using JS
   
 <img width="797" height="757" alt="image" src="https://github.com/user-attachments/assets/d08a97aa-89bb-45f9-a4ad-720f1c0e97f8" />
 
-- **ScreenDeck Settings (WIP)** — Configure Companion Satellite host/port and define ScreenDeck devices (rendering/connection implementation is next)
+- **ScreenDeck Settings (WIP)** — Configure Companion Satellite host/port and define ScreenDeck devices
 - **Optional mDNS** — Runs even if `mdns-js` is not installed (discovery is optional) - caused errors and dependency vulnerabilities as of Jan-2026
 
 ---
