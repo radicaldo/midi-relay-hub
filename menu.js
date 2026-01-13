@@ -52,7 +52,7 @@ const triggersSubmenu = [
 		async click() {
 			const result = await dialog.showSaveDialog({
 				title: 'Export Triggers',
-				defaultPath: 'dave-relay-triggers.json',
+				defaultPath: 'midi-relay-triggers.json',
 				filters: [{ name: 'JSON', extensions: ['json'] }],
 			})
 			if (result.canceled || !result.filePath) return

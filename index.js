@@ -150,7 +150,7 @@ app.on('activate', async () => {
 
 	const icon = nativeImage.createFromDataURL(config.get('icon'))
 	global.tray = new Tray(icon.resize({ width: 24, height: 24 }))
-	global.tray.setToolTip('Dave Relay')
+	global.tray.setToolTip('midi Relay')
 
 	const apiPort = config.get('apiPort')
 	API.setScreenDeckController({
