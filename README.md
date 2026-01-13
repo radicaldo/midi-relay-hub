@@ -2,6 +2,9 @@
 
 **MIDI over HTTP — simple, powerful, and cross-platform.**
 
+Added quite a few enhancements and tools for troubleshooting network midi issues in complex multi system setups.
+
+
 Midi Relay Hub lets you send and receive MIDI messages across a network using JSON-based HTTP requests. Built for AV and stage production (Church, Concerts, stage shows, plays, etc), automation, and integration with tools like streamdeck, [Bitfocus Companion](https://bitfocus.io/companion) and [n8n](https://n8n.io).
 
 > 🎹 *The base of the project is pulled/Forked from [midi-relay](https://github.com/josephdadams/midi-relay) by Joseph Adams*
@@ -12,14 +15,20 @@ Midi Relay Hub lets you send and receive MIDI messages across a network using JS
 
 - **HTTP API** — Send MIDI messages via REST endpoints (JSON)
 - **Real-time Logging** — Live WebSocket stream of all MIDI traffic
+  
+  <img width="787" height="458" alt="image" src="https://github.com/user-attachments/assets/b721c950-872e-40c9-a039-3f50130416ab" />
+
 - **Triggers** — React to incoming MIDI with HTTP webhooks, scripts, or automation
 - **Profiles** — Save/load trigger configurations for different events
 - **Test Button** — Validate your webhook URLs before going live
 - **Cross-platform** — Windows, macOS, Linux (desktop app or headless)
-- **Companion Integration** — Works with Bitfocus Companion module
+- **Companion API URL Builder** — Helps construct URLs to send to companion for triggers and testing
 - **Surfaces (Preview + Embed)** — View registered button surfaces and embed a Companion emulator URL as a fallback viewer
+  
+<img width="797" height="757" alt="image" src="https://github.com/user-attachments/assets/d08a97aa-89bb-45f9-a4ad-720f1c0e97f8" />
+
 - **ScreenDeck Settings (WIP)** — Configure Companion Satellite host/port and define ScreenDeck devices (rendering/connection implementation is next)
-- **Optional mDNS** — Runs even if `mdns-js` is not installed (discovery is optional)
+- **Optional mDNS** — Runs even if `mdns-js` is not installed (discovery is optional) - caused errors and dependency vulnerabilities as of Jan-2026
 
 ---
 
@@ -28,7 +37,7 @@ Midi Relay Hub lets you send and receive MIDI messages across a network using JS
 ### Desktop Application (v3.x)
 
 1. Download the latest release from [Releases](https://github.com/radicaldo/midi-relay-remix/releases)
-2. Launch the app
+2. Install with NPM Install or run exe install on Windows
 3. MIDI ports are scanned automatically on startup
 4. Access the web UI at `http://127.0.0.1:8090` (default; configurable via `apiPort`)
 
