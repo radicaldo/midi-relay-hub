@@ -171,6 +171,12 @@ function sanitizeScreenDeckDevices(devices) {
 }
 
 class API {
+	static screenDeckController = null
+
+	static setScreenDeckController(controller) {
+		API.screenDeckController = controller || null
+	}
+
 	static start(port) {
 		//starts the REST API
 		server = express()
@@ -189,7 +195,6 @@ class API {
 		server.get('/version', function (req, res) {
 			res.send({ version: VERSION })
 		})
-
 		server.get('/control_status', function (req, res) {
 			res.send({ control_status: config.get('allowControl') })
 		})
@@ -244,13 +249,56 @@ class API {
 			}
 		})
 
+		// ScreenDeck (Built-in Satellite) control endpoints. These are useful when the
+		// dashboard is opened in a normal browser where Electron IPC is unavailable.
+		server.get('/screendeck/status', function (_req, res) {
+			try {
+				const ctl = API.screenDeckController
+				const status = ctl && typeof ctl.getStatus === 'function' ? ctl.getStatus() : null
+				res.json({ success: true, status })
+			} catch (e) {
+				res.status(500).json({ success: false, error: e && e.message ? e.message : String(e) })
+			}
+		})
+
+		server.post('/screendeck/reconnect', function (_req, res) {
+			try {
+				const ctl = API.screenDeckController
+				const status = ctl && typeof ctl.reconnect === 'function' ? ctl.reconnect() : null
+				res.json({ success: true, status })
+			} catch (e) {
+				res.status(500).json({ success: false, error: e && e.message ? e.message : String(e) })
+			}
+		})
+
+		server.post('/screendeck/openAll', function (_req, res) {
+			try {
+				const ctl = API.screenDeckController
+				if (ctl && typeof ctl.openAll === 'function') ctl.openAll()
+				res.json({ success: true })
+			} catch (e) {
+				res.status(500).json({ success: false, error: e && e.message ? e.message : String(e) })
+			}
+		})
+
+		server.post('/screendeck/openDevice', function (req, res) {
+			try {
+				const deviceId = req && req.body && typeof req.body.deviceId === 'string' ? req.body.deviceId.trim() : ''
+				if (!deviceId) return res.status(400).json({ success: false, error: 'Missing deviceId' })
+				const ctl = API.screenDeckController
+				if (ctl && typeof ctl.openDevice === 'function') ctl.openDevice(deviceId)
+				return res.json({ success: true })
+			} catch (e) {
+				return res.status(500).json({ success: false, error: e && e.message ? e.message : String(e) })
+			}
+		})
+
 		server.get('/surfaces', function (_req, res) {
 			res.json({ surfaces: surfacesSnapshot() })
 		})
 
 		server.post('/logs/clear', function (req, res) {
 			global.MIDIRelaysLog = []
-			API.broadcastLogsCleared()
 			res.send({ success: true })
 		})
 

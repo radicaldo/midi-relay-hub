@@ -196,6 +196,42 @@ function surfacesSelect(surfaceId) {
 	surfacesRenderPreview()
 }
 
+async function screenDeckSatelliteOpenDevice(deviceId) {
+	const ipc = screenDeckGetIpcRenderer()
+	if (ipc) {
+		return ipc.invoke('screendeck:openDevice', { deviceId })
+	}
+	// Browser fallback
+	const r = await fetch('/screendeck/openDevice', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ deviceId }),
+	}).then((x) => x.json())
+	if (!r || r.success !== true) throw new Error((r && r.error) || 'Failed to open device')
+	return r
+}
+
+async function surfacesOpenSelected() {
+	if (!selectedSurfaceId) {
+		surfacesSetStatus('Select a surface first.', true)
+		return
+	}
+
+	const surface = getSurfaceById(selectedSurfaceId)
+	const product = surface && typeof surface.product === 'string' ? surface.product : ''
+	if (!product || !product.toLowerCase().includes('screendeck')) {
+		surfacesSetStatus('That surface is not a ScreenDeck device.', true)
+		return
+	}
+
+	try {
+		await screenDeckSatelliteOpenDevice(selectedSurfaceId)
+		surfacesSetStatus('Opened deck window.', false)
+	} catch (e) {
+		surfacesSetStatus(e && e.message ? e.message : String(e), true)
+	}
+}
+
 function surfacesRenderList() {
 	const listEl = document.getElementById('surfacesList')
 	if (!listEl) return
@@ -216,6 +252,10 @@ function surfacesRenderList() {
 		btn.className = 'surfaceCard'
 		if (s.surfaceId === selectedSurfaceId) btn.classList.add('active')
 		btn.onclick = () => surfacesSelect(s.surfaceId)
+		btn.ondblclick = () => {
+			surfacesSelect(s.surfaceId)
+			surfacesOpenSelected().catch(() => {})
+		}
 
 		const title = document.createElement('div')
 		title.className = 'surfaceTitle'
@@ -253,14 +293,37 @@ function surfacesRenderPreview() {
 	}
 
 	preview.classList.remove('surfacePreviewEmpty')
+	preview.style.cursor = 'pointer'
+	preview.onclick = () => {
+		surfacesOpenSelected().catch(() => {})
+	}
 
 	const columns = Number.isFinite(surface.columns) ? surface.columns : 8
 	const rows = Number.isFinite(surface.rows) ? surface.rows : 4
 	const keys = surface.keys || {}
 
+	// Make keys square and sized to fit the preview container.
+	const gapPx = 6
+	const previewWidth = preview.getBoundingClientRect().width
+	let paddingX = 0
+	try {
+		const cs = window.getComputedStyle(preview)
+		paddingX = (Number.parseFloat(cs.paddingLeft) || 0) + (Number.parseFloat(cs.paddingRight) || 0)
+	} catch (_e) {
+		paddingX = 0
+	}
+	const usableWidth = Math.max(0, previewWidth - paddingX - 2) // account for padding/borders
+	let keySize = 54
+	if (columns > 0 && usableWidth > 0) {
+		keySize = Math.floor((usableWidth - gapPx * (columns - 1)) / columns)
+	}
+	keySize = Math.max(28, Math.min(72, keySize))
+
 	const grid = document.createElement('div')
 	grid.className = 'surfaceGrid'
-	grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`
+	grid.style.gap = `${gapPx}px`
+	grid.style.gridTemplateColumns = `repeat(${columns}, ${keySize}px)`
+	grid.style.gridAutoRows = `${keySize}px`
 
 	for (let y = 0; y < rows; y++) {
 		for (let x = 0; x < columns; x++) {
@@ -278,8 +341,24 @@ function surfacesRenderPreview() {
 				cell.style.color = state.color
 			}
 
+			const img = document.createElement('img')
+			img.className = 'surfaceKeyImage'
+			img.draggable = false
+			img.alt = ''
+			if (state && typeof state.imageDataUrl === 'string' && state.imageDataUrl.trim()) {
+				img.src = state.imageDataUrl
+				img.style.display = ''
+			} else {
+				img.style.display = 'none'
+			}
+			cell.appendChild(img)
+
+			const label = document.createElement('div')
+			label.className = 'surfaceKeyLabel'
 			const text = typeof state.text === 'string' ? state.text : ''
-			cell.textContent = text || ''
+			label.textContent = text || ''
+			cell.appendChild(label)
+
 			grid.appendChild(cell)
 		}
 	}
@@ -690,7 +769,11 @@ function onLoad() {
 
 function screenDeckGetIpcRenderer() {
 	try {
-		return window.require && window.require('electron') && window.require('electron').ipcRenderer
+		// Prefer Electron IPC when running inside the app.
+		const req = typeof require === 'function' ? require : window.require
+		if (!req) return null
+		const electron = req('electron')
+		return electron && electron.ipcRenderer ? electron.ipcRenderer : null
 	} catch (_e) {
 		return null
 	}
@@ -708,12 +791,14 @@ function screenDeckSetSatelliteStatus(msg, isError) {
 
 async function screenDeckSatelliteRefreshStatus() {
 	const ipc = screenDeckGetIpcRenderer()
-	if (!ipc) {
-		screenDeckSetSatelliteStatus('Built-in satellite status is only available inside the Electron app.', false)
-		return
+	let st = null
+	if (ipc) {
+		st = await ipc.invoke('screendeck:getStatus')
+	} else {
+		// Browser fallback (calls into the running Electron main process via REST)
+		const r = await fetch('/screendeck/status').then((x) => x.json())
+		st = r && r.status ? r.status : null
 	}
-
-	const st = await ipc.invoke('screendeck:getStatus')
 	const conn = st && st.connected ? 'Connected' : st && st.connecting ? 'Connecting' : 'Disconnected'
 	const v = st && st.companionVersion ? `Companion ${st.companionVersion}` : 'Companion (unknown)'
 	const api = st && st.companionApiVersion ? `API ${st.companionApiVersion}` : 'API (unknown)'
@@ -725,15 +810,21 @@ async function screenDeckSatelliteRefreshStatus() {
 
 async function screenDeckSatelliteOpenAll() {
 	const ipc = screenDeckGetIpcRenderer()
-	if (!ipc) return
-	await ipc.invoke('screendeck:openAll')
+	if (ipc) {
+		await ipc.invoke('screendeck:openAll')
+	} else {
+		await fetch('/screendeck/openAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+	}
 	await screenDeckSatelliteRefreshStatus()
 }
 
 async function screenDeckSatelliteReconnect() {
 	const ipc = screenDeckGetIpcRenderer()
-	if (!ipc) return
-	await ipc.invoke('screendeck:reconnect')
+	if (ipc) {
+		await ipc.invoke('screendeck:reconnect')
+	} else {
+		await fetch('/screendeck/reconnect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+	}
 	await screenDeckSatelliteRefreshStatus()
 }
 

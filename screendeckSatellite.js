@@ -2,6 +2,7 @@
 
 const net = require('net')
 const { BrowserWindow } = require('electron')
+const { PNG } = require('pngjs')
 
 const config = require('./config.js')
 const API = require('./api.js')
@@ -21,6 +22,34 @@ function detectImageMime(buffer) {
 	// GIF: 47 49 46
 	if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) return 'image/gif'
 	return null
+}
+
+function rawBitmapToPngDataUrl(buffer, size) {
+	try {
+		const s = clampInt(size, 1, 512, 72)
+		const pixels = s * s
+		if (!buffer || buffer.length < pixels * 3) return null
+
+		let srcBpp = 0
+		if (buffer.length === pixels * 3) srcBpp = 3
+		else if (buffer.length === pixels * 4) srcBpp = 4
+		else return null
+
+		const png = new PNG({ width: s, height: s })
+		for (let i = 0; i < pixels; i++) {
+			const si = i * srcBpp
+			const di = i * 4
+			png.data[di + 0] = buffer[si + 0]
+			png.data[di + 1] = buffer[si + 1]
+			png.data[di + 2] = buffer[si + 2]
+			png.data[di + 3] = srcBpp === 4 ? buffer[si + 3] : 0xff
+		}
+
+		const out = PNG.sync.write(png)
+		return `data:image/png;base64,${out.toString('base64')}`
+	} catch (_e) {
+		return null
+	}
 }
 
 function clampInt(value, min, max, fallback) {
@@ -450,8 +479,13 @@ class ScreenDeckSatellite {
 			if (typeof params.BITMAP === 'string' && params.BITMAP) {
 				try {
 					const buf = Buffer.from(params.BITMAP, 'base64')
-					const mime = detectImageMime(buf) || 'application/octet-stream'
-					imageDataUrl = `data:${mime};base64,${buf.toString('base64')}`
+					const mime = detectImageMime(buf)
+					if (mime) {
+						imageDataUrl = `data:${mime};base64,${buf.toString('base64')}`
+					} else {
+						// Companion often sends raw RGB/RGBA frames. Convert to PNG for rendering.
+						imageDataUrl = rawBitmapToPngDataUrl(buf, dev.bitmap)
+					}
 				} catch (_e) {
 					imageDataUrl = null
 				}

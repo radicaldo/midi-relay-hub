@@ -7,6 +7,30 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css" />
 		<link rel="stylesheet" href="index.css" />
 		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			;(function () {
+				try {
+					if (!globalThis.crypto) globalThis.crypto = {}
+					if (typeof globalThis.crypto.randomUUID !== 'function') {
+						// Electron renderer with nodeIntegration: use Node's crypto as a fallback.
+						const nodeCrypto = require('crypto')
+						if (nodeCrypto && typeof nodeCrypto.randomUUID === 'function') {
+							globalThis.crypto.randomUUID = nodeCrypto.randomUUID
+						} else if (nodeCrypto && typeof nodeCrypto.randomBytes === 'function') {
+							globalThis.crypto.randomUUID = () => {
+								const b = nodeCrypto.randomBytes(16)
+								b[6] = (b[6] & 0x0f) | 0x40
+								b[8] = (b[8] & 0x3f) | 0x80
+								const h = b.toString('hex')
+								return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
+							}
+						}
+					}
+				} catch (_e) {
+					// ignore
+				}
+			})()
+		</script>
 	</head>
 	<body onLoad="onLoad();">
 		<div id="container">
@@ -565,7 +589,12 @@ http://(companionIP:companionPort)/api/location/(page)/(row)/(column)/(action)</
 							</div>
 						</div>
 						<div>
-							<div style="font-weight: 600; margin-bottom: 6px;">Preview</div>
+							<div style="display:flex; align-items:center; justify-content:space-between; gap: 10px; margin-bottom: 6px;">
+								<div style="font-weight: 600;">Preview</div>
+								<div style="display:flex; gap: 8px; flex-wrap: wrap;">
+									<button onclick="surfacesOpenSelected()">Open Deck Window</button>
+								</div>
+							</div>
 							<div id="surfacePreview" class="surfacePreview"></div>
 						</div>
 					</div>

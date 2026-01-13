@@ -153,6 +153,15 @@ app.on('activate', async () => {
 	global.tray.setToolTip('Dave Relay')
 
 	const apiPort = config.get('apiPort')
+	API.setScreenDeckController({
+		getStatus: () => screenDeckSatellite.getStatus(),
+		reconnect: () => {
+			screenDeckSatellite.reconnect()
+			return screenDeckSatellite.getStatus()
+		},
+		openAll: () => screenDeckSatellite.openAllWindows(),
+		openDevice: (deviceId) => screenDeckSatellite.openWindow(deviceId),
+	})
 	API.start(apiPort)
 	screenDeckSatellite.init({ apiPort })
 	global.broadcastTriggers = function () {
@@ -165,6 +174,15 @@ app.on('activate', async () => {
 	// IPC: ScreenDeck (Built-in Satellite)
 	ipcMain.handle('screendeck:getStatus', async () => {
 		return screenDeckSatellite.getStatus()
+	})
+	ipcMain.handle('screendeck:openDevice', async (_e, { deviceId }) => {
+		try {
+			if (typeof deviceId !== 'string' || !deviceId.trim()) return { success: false, error: 'Missing deviceId' }
+			screenDeckSatellite.openWindow(deviceId.trim())
+			return { success: true }
+		} catch (e) {
+			return { success: false, error: e && e.message ? e.message : String(e) }
+		}
 	})
 	ipcMain.handle('screendeck:openAll', async () => {
 		screenDeckSatellite.openAllWindows()

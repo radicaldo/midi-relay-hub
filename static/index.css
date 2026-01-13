@@ -109,15 +109,23 @@ input:checked + .slider::before {
 }
 
 #container {
-	display: flex;
-	width: 600px;
+	max-width: 1120px;
+	width: calc(100vw - 48px);
 	margin: 20px auto;
-	padding: 20px;
+	padding: 18px;
 	display: block;
+	border-radius: 14px;
+	background: rgba(0, 0, 0, 0.02);
+	border: 1px solid rgba(0, 0, 0, 0.06);
+}
 
-	#titleText {
-		text-align: center;
-	}
+[data-theme='dark'] #container {
+	background: rgba(255, 255, 255, 0.04);
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+#titleText {
+	text-align: center;
 }
 
 .logo {
@@ -437,6 +445,7 @@ pre {
 	border-radius: 10px;
 	padding: 10px;
 	background: rgba(0, 0, 0, 0.03);
+	overflow: auto;
 }
 
 [data-theme='dark'] .surfacePreview {
@@ -465,22 +474,53 @@ pre {
 .surfaceGrid {
 	display: grid;
 	gap: 6px;
+	justify-content: start;
+	align-content: start;
 }
 
 .surfaceKey {
-	border: 1px solid rgba(0, 0, 0, 0.18);
-	border-radius: 8px;
-	background: rgba(255, 255, 255, 0.8);
-	min-height: 46px;
-	padding: 6px;
-	font-size: 12px;
-	line-height: 1.1;
-	white-space: pre-wrap;
+	position: relative;
 	overflow: hidden;
-	text-overflow: ellipsis;
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+	border: 1px solid rgba(0, 0, 0, 0.18);
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.8);
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+	user-select: none;
+}
+
+.surfaceKeyImage {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.surfaceKeyLabel {
+	position: absolute;
+	left: 6px;
+	right: 6px;
+	bottom: 6px;
+	font-size: 12px;
+	line-height: 1.15;
+	text-align: center;
+	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	padding: 3px 4px;
+	border-radius: 6px;
+	background: rgba(0, 0, 0, 0.2);
 }
 
 [data-theme='dark'] .surfaceKey {
 	border-color: rgba(255, 255, 255, 0.18);
 	background: rgba(255, 255, 255, 0.08);
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
