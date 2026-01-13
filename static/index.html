@@ -1,0 +1,584 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Dave Relay</title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css" />
+		<link rel="stylesheet" href="index.css" />
+		<script src="/socket.io/socket.io.js"></script>
+	</head>
+	<body onLoad="onLoad();">
+		<div id="container">
+			<div id="statusBar" style="background: rgba(0,0,0,0.05); padding: 5px 10px; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; border-radius: 4px 4px 0 0; margin-bottom: 10px;">
+				<span id="statusConnection"><i class="fas fa-circle" style="color: #999;"></i> Connecting...</span>
+				<span>
+					<span id="statusAPI">API: :4000</span> | 
+					<span id="statusVersion">v...</span>
+				</span>
+			</div>
+			<div id="titleText">
+				<h2>Dave Relay: Automation Hub</h2>
+			</div>
+			<div class="theme-switch-wrapper">
+				<!-- Text and icon -->
+				<span id="toggle-icon">
+					<span class="toggle-text"></span>
+					<i class="fas fa-sun"></i>
+				</span>
+				<!-- Switcher -->
+				<label class="theme-switch">
+					<input id="chkLightDarkMode" type="checkbox" />
+					<div class="slider round"></div>
+				</label>
+			</div>
+			<div id="navBar">
+				<button class="navButton" id="navTriggers" onclick="showPanel('panelTriggers')">Triggers</button>
+				<button class="navButton" id="navActivity" onclick="showPanel('panelActivity')">Activity</button>
+				<button class="navButton" id="navSurfaces" onclick="showPanel('panelSurfaces')">Surfaces</button>
+				<button class="navButton" id="navIntegrations" onclick="showPanel('panelIntegrations')">Integrations</button>
+				<button class="navButton" id="navProfiles" onclick="showPanel('panelProfiles')">Profiles</button>
+			</div>
+
+			<div id="panelTriggers" class="mainPanel">
+			<div id="divTriggersContainer">
+				<h4>Triggers:</h4>
+				<div id="divTriggers"></div>
+				<br />
+				<button id="btnShowAddTrigger" onclick="ShowAddTrigger();">Add New MIDI Trigger</button><br /><br />
+				<div id="divTriggerFields" style="display: none">
+					<div class="row">
+						<div class="col-40">
+							<label for="txtTriggerName">Trigger Name:</label>
+						</div>
+						<div class="col-60">
+							<input type="text" id="txtTriggerName" placeholder="e.g. Start Lyrics, Next Slide" size="40" />
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-40">
+							<label for="selectMIDIPort">MIDI Input Port:</label>
+						</div>
+						<div class="col-60">
+							<select id="selectMIDIPort"></select>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-40">
+							<label for="selectMIDIMessageType">Incoming MIDI Message Type:</label>
+						</div>
+						<div class="col-60">
+							<select id="selectMIDIMessageType" onchange="showMIDIMessageOptions();">
+								<option value="0">(Choose a Type)</option>
+								<option value="noteon">Note On</option>
+								<option value="noteoff">Note Off</option>
+								<option value="aftertouch">Polyphonic Aftertouch</option>
+								<option value="cc">Control Change</option>
+								<option value="pc">Program Change</option>
+								<option value="pressure">Channel Pressure / Aftertouch</option>
+								<option value="pitchbend">Pitch Bend / Pitch Wheel</option>
+								<option value="sysex">SysEx</option>
+							</select>
+						</div>
+					</div>
+					<div id="divMIDIMessage_Options">
+						<div id="divMIDIMessage_Options_Channel" style="display: none">
+							<div class="row">
+								<div class="col-40">
+									<label for="selectMIDIChannel">Channel:</label>
+								</div>
+								<div class="col-60">
+									<select id="selectMIDIChannel"></select>
+								</div>
+							</div>
+						</div>
+						<div id="divMIDIMessage_Options_Note" style="display: none">
+							<div class="row">
+								<div class="col-40">
+									<label for="selectMIDINote">Note:</label>
+								</div>
+								<div class="col-60">
+									<select id="selectMIDINote"></select>
+								</div>
+							</div>
+						</div>
+						<div id="divMIDIMessage_Options_Velocity" style="display: none">
+							<div class="row">
+								<div class="col-40">
+									<label for="selectMIDIVelocity">Velocity:</label>
+								</div>
+								<div class="col-60">
+									<select id="selectMIDIVelocity"></select>
+								</div>
+							</div>
+						</div>
+						<div id="divMIDIMessage_Options_Controller" style="display: none">
+							<div class="row">
+								<div class="col-40">
+									<label for="selectMIDIController">Controller:</label>
+								</div>
+								<div class="col-60">
+									<select id="selectMIDIController"></select>
+								</div>
+							</div>
+						</div>
+						<div id="divMIDIMessage_Options_Value" style="display: none">
+							<div class="row">
+								<div class="col-40">
+									<label for="selectMIDIValue">Value:</label>
+								</div>
+								<div class="col-60">
+									<select id="selectMIDIValue"></select>
+								</div>
+							</div>
+						</div>
+						<div id="divMIDIMessage_Options_PitchBend_Value" style="display: none">
+							<div class="row">
+								<div class="col-40">
+									<label for="inputMIDIPitchBendValue">Value (between 0 and 16383):</label>
+								</div>
+								<div class="col-60">
+									<input type="text" id="inputMIDIPitchBendValue" value="8192" width="50" />
+								</div>
+							</div>
+						</div>
+						<div id="divMIDIMessage_Options_SysExMessage" style="display: none">
+							<div class="row">
+								<div class="col-40">
+									<label for="inputMIDISysExMessage">SysEx Message:</label>
+								</div>
+								<div class="col-60">
+									<input type="text" id="inputMIDISysExMessage" size="40" placeholder="F0 7E 00 06 01 F7" />
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-40">
+							<label for="selectActionType">Trigger Action:</label>
+						</div>
+						<div class="col-60">
+							<select id="selectActionType" onchange="showActionTypeOptions();">
+								<option value="http">Call HTTP URL</option>
+								<option value="applescript">Run AppleScript (macOS only)</option>
+								<option value="shellscript">Run Shell Script/Command</option>
+							</select>
+						</div>
+					</div>
+					<div id="divMIDIMessage_ActionType_HTTP">
+						<div class="row">
+							<div class="col-40">
+								<label for="selectHTTPMethod">HTTP Method:</label>
+							</div>
+							<div class="col-60">
+								<select id="selectHTTPMethod">
+									<option value="">(auto)</option>
+									<option value="GET">GET</option>
+									<option value="POST">POST</option>
+									<option value="PUT">PUT</option>
+									<option value="PATCH">PATCH</option>
+									<option value="DELETE">DELETE</option>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-40">
+								<label for="txtURL">URL:</label>
+							</div>
+							<div class="col-60">
+								<input type="text" id="txtURL" size="40" />
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-40">
+								<label for="txtJSONData">JSON Data:</label>
+							</div>
+							<div class="col-60">
+								<textarea rows="5" cols="40" id="txtJSONData"></textarea>
+							</div>
+						</div>
+					</div>
+					<div id="divMIDIMessage_ActionType_AppleScript" style="display: none">
+						<div class="row">
+							<div class="col-40">
+								<label for="txtAppleScript">AppleScript:</label>
+							</div>
+							<div class="col-60">
+								<textarea rows="5" cols="40" id="txtAppleScript"></textarea>
+							</div>
+						</div>
+					</div>
+					<div id="divMIDIMessage_ActionType_ShellScript" style="display: none">
+						<div class="row">
+							<div class="col-40">
+								<label for="txtShellScript">Shell Script:</label>
+							</div>
+							<div class="col-60">
+								<textarea rows="5" cols="40" id="txtShellScript"></textarea>
+							</div>
+						</div>
+					</div>
+					<div id="divMIDIMessage_Description">
+						<div class="row">
+							<div class="col-40">
+								<label for="txtDescription">Description:</label>
+							</div>
+							<div class="col-60">
+								<textarea rows="5" cols="40" id="txtDescription"></textarea>
+							</div>
+						</div>
+					</div>
+					<br />
+					<button id="btnAddTrigger" onclick="AddTrigger();">Add Trigger</button>
+					<button id="btnEditTrigger" onclick="EditTrigger();">Edit Trigger</button>
+					<button id="btnCancel" onclick="Cancel();" style="display: inline-block">Cancel</button>
+					<br />
+				</div>
+			</div>
+			<br />
+			<hr />
+			<div id="divImportExportContainer">
+				<h4>Import/Export Data:</h4>
+				<button id="btnExport_Triggers" onclick="export_triggers();">Export Triggers</button><br /><br />
+				<div class="row">
+					<div class="col-40">
+						<label for="flImport">Triggers Settings File:</label>
+					</div>
+					<div class="col-60">
+						<input type="file" id="flImport" />
+					</div>
+				</div>
+				<button id="btnImport_Triggers" onclick="import_triggers();">Import Triggers</button>
+			</div>
+			<br />
+			<hr />
+			<div id="divMiniActivityContainer">
+				<h4>Recent Activity: <span style="font-weight: normal; font-size: 0.9em;">(click <a href="#panelActivity" onclick="showPanel('panelActivity'); return false;">Activity</a> for full log)</span></h4>
+				<div id="divMiniActivityLog" style="height: 120px; overflow-y: scroll; background-color: #eee; padding: 10px; font-family: monospace; font-size: 0.85em; border: 1px solid #ccc;"></div>
+			</div>
+			</div>
+
+			<div id="panelActivity" class="mainPanel" style="display:none;">
+				<div id="divActivityContainer">
+					<h4>Live Activity:</h4>
+					<div id="divActivityLog" style="height: 200px; overflow-y: scroll; background-color: #eee; padding: 10px; font-family: monospace; border: 1px solid #ccc;"></div>
+					<br />
+					<button onclick="clearLog();">Clear Activity Log</button>
+				</div>
+			</div>
+
+			<div id="panelIntegrations" class="mainPanel" style="display:none;">
+				<h4>Integrations</h4>
+				<div class="row" id="bitfocusCompanionInfo" style="margin-top: 6px;">
+					<button class="accordion active" id="bitfocusCompanionHelpers" onclick="showHideAccordion(this)">
+						BitFocus Companion Helpers
+					</button>
+					<div class="panel" id="bitfocusCompanionInfoPanel" style="max-height: 2000px;">
+						<p>For Call Bitfocus Companion Button Function, use rules below:</p>
+						<ul>
+							<li>Enable Bitfocus Companion HTTP API in Settings -> HTTP API</li>
+							<li>
+								Available Action (action) Button Value:
+								<ul>
+									<li>press - Press and release a button (run both down and up actions)</li>
+									<li>down - Press the button (run down actions and hold)</li>
+									<li>up - Release the button (run up actions)</li>
+									<li>rotate-left - Trigger a left rotation of the button/encoder</li>
+									<li>rotate-right - Trigger a right rotation of the button/encoder</li>
+								</ul>
+							</li>
+							<li>
+								Fill URL with :
+								<div class="row clipboardText">
+									<div class="col-80">
+										<pre id="copyCompanionUrl" onclick="copyToClipboard('copyCompanionUrl')">
+http://(companionIP:companionPort)/api/location/(page)/(row)/(column)/(action)</pre
+									>
+									</div>
+									<div class="col-20">
+										<button class="copyButton" onclick="copyToClipboard('copyCompanionUrl')">Copy</button>
+									</div>
+								</div>
+							</li>
+							<li>
+								Fill JSON Data with dummy JSON
+								<div class="row clipboardText">
+									<div class="col-80">
+										<pre id="copyJsonData" onclick="copyToClipboard('copyJsonData')">{"hello":"hello"}</pre>
+									</div>
+									<div class="col-20">
+										<button class="copyButton" onclick="copyToClipboard('copyJsonData')">Copy</button>
+									</div>
+								</div>
+							</li>
+							<li style="margin-top: 10px;">
+								<strong>Companion URL Builder</strong>
+								<div style="margin-top: 8px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.6);">
+									<div class="row">
+										<div class="col-40"><label for="companionProtocol">Protocol:</label></div>
+										<div class="col-60">
+											<select id="companionProtocol" onchange="companionBuilderUpdate()">
+												<option value="http">http</option>
+												<option value="https">https</option>
+											</select>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-40"><label for="companionHost">Host/IP:</label></div>
+										<div class="col-60"><input id="companionHost" type="text" value="127.0.0.1" oninput="companionBuilderUpdate()" /></div>
+									</div>
+									<div class="row">
+										<div class="col-40"><label for="companionPort">Port:</label></div>
+										<div class="col-60"><input id="companionPort" type="number" value="8888" min="1" max="65535" oninput="companionBuilderUpdate()" /></div>
+									</div>
+									<div class="row">
+										<div class="col-40"><label for="companionEndpointType">Endpoint:</label></div>
+										<div class="col-60">
+											<select id="companionEndpointType" onchange="companionBuilderUpdate()">
+												<option value="location-action">Location: Button Action</option>
+												<option value="location-style-query">Location: Style (query)</option>
+												<option value="location-style-body">Location: Style (JSON body)</option>
+												<option value="custom-variable-set-query">Custom Variable: Set (query)</option>
+												<option value="custom-variable-set-body">Custom Variable: Set (JSON body)</option>
+												<option value="custom-variable-get">Custom Variable: Get (GET)</option>
+												<option value="module-variable-get">Module Variable: Get (GET)</option>
+												<option value="surfaces-rescan">Surfaces: Rescan (POST)</option>
+											</select>
+										</div>
+									</div>
+
+									<div id="companionLocationFields">
+										<div class="row">
+											<div class="col-40"><label for="companionPage">Page:</label></div>
+											<div class="col-60"><input id="companionPage" type="number" value="1" min="1" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionRow">Row:</label></div>
+											<div class="col-60"><input id="companionRow" type="number" value="0" min="0" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionColumn">Column:</label></div>
+											<div class="col-60"><input id="companionColumn" type="number" value="0" min="0" oninput="companionBuilderUpdate()" /></div>
+										</div>
+									</div>
+
+									<div id="companionLocationActionFields">
+										<div class="row">
+											<div class="col-40"><label for="companionAction">Action:</label></div>
+											<div class="col-60">
+												<select id="companionAction" onchange="companionBuilderUpdate()">
+													<option value="press">press</option>
+													<option value="down">down</option>
+													<option value="up">up</option>
+													<option value="rotate-left">rotate-left</option>
+													<option value="rotate-right">rotate-right</option>
+													<option value="step">step</option>
+												</select>
+											</div>
+										</div>
+									</div>
+
+									<div id="companionStyleQueryFields" style="display:none;">
+										<div class="row">
+											<div class="col-40"><label for="companionStyleParam">Style Param:</label></div>
+											<div class="col-60">
+												<select id="companionStyleParam" onchange="companionBuilderUpdate()">
+													<option value="text">text</option>
+													<option value="bgcolor">bgcolor</option>
+													<option value="color">color</option>
+												</select>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionStyleValue">Value:</label></div>
+											<div class="col-60"><input id="companionStyleValue" type="text" value="TEST" oninput="companionBuilderUpdate()" /></div>
+										</div>
+									</div>
+
+									<div id="companionStyleBodyFields" style="display:none;">
+										<div class="row">
+											<div class="col-40"><label for="companionStyleText">text:</label></div>
+											<div class="col-60"><input id="companionStyleText" type="text" value="" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionStyleBg">bgcolor:</label></div>
+											<div class="col-60"><input id="companionStyleBg" type="text" value="" placeholder="#ffffff" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionStyleColor">color:</label></div>
+											<div class="col-60"><input id="companionStyleColor" type="text" value="" placeholder="#000000" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionStyleSize">size:</label></div>
+											<div class="col-60"><input id="companionStyleSize" type="number" value="" placeholder="28" oninput="companionBuilderUpdate()" /></div>
+										</div>
+									</div>
+
+									<div id="companionCustomVarFields" style="display:none;">
+										<div class="row">
+											<div class="col-40"><label for="companionCustomVarName">Variable Name:</label></div>
+											<div class="col-60"><input id="companionCustomVarName" type="text" value="cue" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionCustomVarValue">Value:</label></div>
+											<div class="col-60"><input id="companionCustomVarValue" type="text" value="intro" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionCustomVarValueMode">Value Mode:</label></div>
+											<div class="col-60">
+												<select id="companionCustomVarValueMode" onchange="companionBuilderUpdate()">
+													<option value="text">Text (stored as string)</option>
+													<option value="json">JSON (object/number/boolean/etc)</option>
+												</select>
+											</div>
+										</div>
+									</div>
+
+									<div id="companionModuleVarFields" style="display:none;">
+										<div class="row">
+											<div class="col-40"><label for="companionModuleLabel">Connection Label:</label></div>
+											<div class="col-60"><input id="companionModuleLabel" type="text" value="My Connection" oninput="companionBuilderUpdate()" /></div>
+										</div>
+										<div class="row">
+											<div class="col-40"><label for="companionModuleVar">Variable Name:</label></div>
+											<div class="col-60"><input id="companionModuleVar" type="text" value="name" oninput="companionBuilderUpdate()" /></div>
+										</div>
+									</div>
+
+									<div class="row clipboardText" style="margin-top: 6px;">
+										<div class="col-80">
+											<pre id="companionBuiltUrl" onclick="copyToClipboard('companionBuiltUrl')">http://127.0.0.1:8888/api/location/1/0/0/press</pre>
+										</div>
+										<div class="col-20">
+											<button class="copyButton" onclick="copyToClipboard('companionBuiltUrl')">Copy</button>
+										</div>
+									</div>
+									<div class="row" style="margin-top: 4px;">
+										<div class="col-40"><strong>Method:</strong></div>
+										<div class="col-60"><span id="companionBuiltMethod">POST</span></div>
+									</div>
+									<div class="row clipboardText" id="companionBuiltJsonRow" style="margin-top: 6px; display:none;">
+										<div class="col-80">
+											<pre id="companionBuiltJson" onclick="copyToClipboard('companionBuiltJson')">{}</pre>
+										</div>
+										<div class="col-20">
+											<button class="copyButton" onclick="copyToClipboard('companionBuiltJson')">Copy</button>
+										</div>
+									</div>
+									<div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+										<button onclick="companionBuilderApply()">Use This URL</button>
+									</div>
+									<div style="margin-top:6px; font-size: 0.9em; color: #374151;">
+										Note: Companion location actions are typically <strong>POST</strong>. Page is usually 1-based; row/column are often 0-based.
+									</div>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="row" style="margin-top: 10px;">
+					<button class="accordion" id="screenDeckSettingsAccordion" onclick="showHideAccordion(this)">
+						ScreenDeck / StreamDeck (Companion Satellite)
+					</button>
+					<div class="panel" id="screenDeckSettingsPanel">
+						<p style="margin-top: 8px;">
+							Configure how this hub connects to Companion Satellite and how many virtual decks you want to manage.
+							(This is the "settings page" piece — the actual Satellite client is the next step.)
+						</p>
+
+						<div style="margin-top: 8px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.6);">
+							<div style="font-weight: 600; margin-bottom: 6px;">Companion Connection</div>
+							<div class="row">
+								<div class="col-40"><label for="screenDeckCompanionHost">IP Address:</label></div>
+								<div class="col-60" style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
+									<input id="screenDeckCompanionHost" type="text" placeholder="127.0.0.1" />
+									<label for="screenDeckCompanionPort" style="padding: 0 0 0 8px;">Port:</label>
+									<input id="screenDeckCompanionPort" type="number" value="16622" min="1" max="65535" style="max-width: 140px;" />
+									<button onclick="screenDeckSaveConnection()">Save</button>
+								</div>
+							</div>
+							<div id="screenDeckSettingsStatus" style="font-size: 0.9em; color: #374151; margin-top: 6px;">(not configured)</div>
+						</div>
+
+						<div style="margin-top: 10px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.6);">
+							<div style="display:flex; align-items:center; justify-content:space-between; gap: 10px;">
+								<div style="font-weight: 600;">ScreenDeck Devices</div>
+								<button onclick="screenDeckAddDevice()">+ Add New ScreenDeck</button>
+							</div>
+							<div id="screenDeckDevices" style="margin-top: 10px;"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="panelSurfaces" class="mainPanel" style="display:none;">
+				<h4>Surfaces</h4>
+				<div style="margin: 10px 0; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.55);">
+					<div id="surfacesStatus" style="font-size: 0.9em; color: #374151;">Waiting for surfaces…</div>
+					<div style="margin-top: 6px; font-size: 0.9em; color: #374151;">
+						Tip: configure ScreenDeck connection/devices in <a href="#panelIntegrations" onclick="showPanel('panelIntegrations'); return false;">Integrations</a>.
+					</div>
+					<div style="margin-top: 10px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.65);">
+						<div style="font-weight: 600; margin-bottom: 6px;">Companion Emulator (Last Resort)</div>
+						<div class="row">
+							<div class="col-40"><label for="screenDeckEmulatorUrl">Emulator URL:</label></div>
+							<div class="col-60" style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
+								<input id="screenDeckEmulatorUrl" type="text" placeholder="http://10.77.77.150:8000/emulator/..." class="screenDeckEmulatorUrlInput" />
+								<button onclick="screenDeckSaveEmulatorUrl()">Save</button>
+								<button onclick="screenDeckLoadEmulator()">Load</button>
+								<button onclick="screenDeckOpenEmulator()">Open</button>
+							</div>
+						</div>
+						<div id="screenDeckEmulatorStatus" class="screenDeckEmulatorStatus">(not configured)</div>
+						<iframe
+							id="screenDeckEmulatorFrame"
+							class="surfaceEmulatorFrame"
+							title="Companion Emulator"
+							sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+						></iframe>
+					</div>
+					<div style="display:grid; grid-template-columns: 260px 1fr; gap: 12px; margin-top: 10px;">
+						<div>
+							<div style="font-weight: 600; margin-bottom: 6px;">Connected</div>
+							<div id="surfacesList" class="surfacesList"></div>
+							<div style="margin-top: 8px; font-size: 0.85em; color: #6b7280;">
+								Tip: surface clients can register via Socket.IO event <code>surface_register</code>.
+							</div>
+						</div>
+						<div>
+							<div style="font-weight: 600; margin-bottom: 6px;">Preview</div>
+							<div id="surfacePreview" class="surfacePreview"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="panelProfiles" class="mainPanel" style="display:none;">
+				<div id="divProfilesPanel" style="margin: 10px 0; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: rgba(255,255,255,0.55);">
+					<h4 style="margin: 0 0 8px 0;">Profiles</h4>
+					<div class="row">
+						<div class="col-40"><label for="profileName">Profile Name:</label></div>
+						<div class="col-60" style="display:flex; gap:8px; align-items:center;">
+							<input id="profileName" type="text" placeholder="e.g. Sunday AM" />
+							<button onclick="profilesSaveCurrent()">Save Current</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-40"><label for="profileSelect">Existing Profiles:</label></div>
+						<div class="col-60" style="display:flex; gap:8px; align-items:center;">
+							<select id="profileSelect" onchange="profilesSelectChanged()"></select>
+							<button onclick="profilesLoadSelected()">Load</button>
+							<button onclick="profilesDeleteSelected()">Delete</button>
+						</div>
+					</div>
+					<div class="row" style="margin-top: 6px;">
+						<div class="col-40"><strong>Status:</strong></div>
+						<div class="col-60"><span id="profileStatus" style="color:#374151;">(not loaded)</span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="scripts.js"></script>
+	</body>
+</html>
