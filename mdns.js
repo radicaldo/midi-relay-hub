@@ -12,7 +12,7 @@ var mdns_browser = null //mdns browser variable
 function startMDNS() {
 	if (!mdns) {
 		console.warn(
-			"mDNS disabled: optional dependency 'mdns-js' is not installed. Run `npm i mdns-js` to enable discovery."
+			"mDNS disabled: optional dependency 'mdns-js' is not installed. Run `npm i mdns-js@0.2.9` to enable discovery."
 		)
 		return
 	}

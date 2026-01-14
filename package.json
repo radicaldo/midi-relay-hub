@@ -13,7 +13,7 @@
 		"start": "electron .",
 		"format": "prettier -w .",
 		"lint:raw": "eslint --ext .ts --ext .js --ignore-pattern dist --ignore-pattern pkg",
-		"lint": "yarn lint:raw .",
+		"lint": "npm run lint:raw -- .",
 		"pack": "electron-builder --dir",
 		"dist": "electron-builder --linux --windows",
 		"distWin": "electron-builder --windows",
@@ -72,7 +72,7 @@
 		"socket.io": "^4.5.1"
 	},
 	"optionalDependencies": {
-		"mdns-js": "^1.0.3"
+		"mdns-js": "0.2.9"
 	},
 	"devDependencies": {
 		"@electron/rebuild": "^3.3.0",

@@ -18,14 +18,14 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: yarn
+          cache: npm
 
       - name: Install ALSA build dependencies (Linux only)
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev
         
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
         
       - name: Rebuild native modules for Electron
         run: npx @electron/rebuild -f -w midi

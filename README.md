@@ -51,18 +51,18 @@ git clone https://github.com/radicaldo/midi-relay-hub.git
 cd midi-relay-hub
 
 # Install dependencies
-yarn install
+npm install
 
 # Start the app
-yarn start
+npm start
 ```
 
 ### Running Tests
 
 ```bash
-yarn test               # Run all tests
-yarn test:watch         # Watch mode
-yarn test:coverage      # With coverage report
+npm test                # Run all tests
+npm run test:watch      # Watch mode
+npm run test:coverage   # With coverage report
 ```
 
 ---
